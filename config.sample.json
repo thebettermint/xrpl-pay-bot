@@ -1,0 +1,43 @@
+[
+  {
+    "server": "wss://s.altnet.rippletest.net:51233",
+    "source": {
+      "classicAddress": "rMfCZhBfR4tRunHaE9jrtdsjF5stuuQ9JB",
+      "destinationTag": null,
+      "xAddress": null
+    },
+    "destinations": {
+      "cycle": "random",
+      "list": [
+        {
+          "classicAddress": "rMfCZhBfR4tRunHaE9jrtdsjF5stuuQ9JB",
+          "destinationTag": null,
+          "xAddress": null
+        },
+        {
+          "classicAddress": "rMfCZhBfR4tRunHaE9jrtdsjF5stuuQ9JB",
+          "destinationTag": 123,
+          "xAddress": null
+        },
+        {
+          "classicAddress": null,
+          "destinationTag": null,
+          "xAddress": "T7AhgLLKhQDifNt8FceQ8P6RXFmeoQBLKjTGYaqZnUW5AC7"
+        }
+      ]
+    },
+    "amount": {
+      "currency": "XRP",
+      "issuer": null,
+      "value": 1
+    },
+    "time": {
+      "timingFunction": "linear",
+      "expansion": true,
+      "delay": 0,
+      "interval": 60000,
+      "maxInterval": null,
+      "minInterval": null
+    }
+  }
+]
