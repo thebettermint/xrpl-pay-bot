@@ -1,56 +1,73 @@
-import { Wallet, Payment, xrpToDrops, FeeRequest } from 'xrpl';
+import { Wallet, Payment, FeeRequest } from 'xrpl';
 import * as client from './client';
-import { WalletObj } from '../../../types/wallet';
 import { Amount } from 'xrpl/dist/npm/models/common';
 import { checkBalance } from './checkBalance';
 import { servers } from '../../lib/constants';
 
+import { parseXAddress } from '../utils/parse';
+
 export const payment = async ({
-  wallet,
-  publicAddress,
-  destinationTag,
-  amount,
   network,
+  sourceAddress,
+  sourceTag,
+  sourceXaddress,
+  sourceSecret,
+  destinationAddress,
+  destinationTag,
+  destinationXaddress,
+  amount,
 }: {
-  wallet: WalletObj;
-  publicAddress?: string;
-  destinationTag?: number | undefined;
-  amount?: string | undefined;
   network: string;
+  sourceAddress?: string;
+  sourceTag?: number;
+  sourceXaddress?: string;
+  sourceSecret: string;
+  destinationAddress: string;
+  destinationTag?: number;
+  destinationXaddress?: string;
+  amount: Amount;
 }) => {
   let api = await client.init(servers[network] || network);
   try {
     await api.connect();
-    let signer = Wallet.fromSecret(wallet.account.secret);
-    let handledAmount: Amount = amount
-      ? xrpToDrops(amount)
-      : xrpToDrops(String(wallet.balance));
+    let signer = Wallet.fromSecret(sourceSecret);
+
+    console.log(sourceAddress);
 
     const feeRequest: FeeRequest = {
       command: 'fee',
     };
 
+    if (sourceXaddress) {
+      let address = parseXAddress(sourceXaddress);
+      if (!(address instanceof Error)) {
+        sourceAddress = address[0];
+        if (address[1]) sourceTag = address[1];
+      }
+    }
+
+    if (destinationXaddress) {
+      let address = parseXAddress(destinationXaddress);
+      if (!(address instanceof Error)) {
+        destinationAddress = address[0];
+        if (address[1]) destinationTag = address[1];
+      }
+    }
+
     let feeResponse = await api.request(feeRequest);
     let fee: string = feeResponse.result.drops.median_fee;
     let cushion = api.feeCushion;
-    handledAmount = String(
-      parseInt(handledAmount) -
-        Math.max(12000, parseInt(fee) * cushion) -
-        parseInt(xrpToDrops('10'))
-    );
-
-    if (!publicAddress)
-      throw Error('Destination account not found for payment');
+    console.log('Estimated Fee :', fee + cushion);
 
     let tx: Payment = {
       TransactionType: 'Payment',
       Account: signer.classicAddress,
-      Amount: handledAmount,
-      Destination: publicAddress,
-      Fee: String(Math.max(12000, parseInt(fee) * cushion)),
+      Amount: amount,
+      Destination: destinationAddress,
     };
 
     if (destinationTag) tx.DestinationTag = destinationTag;
+    if (sourceTag) tx.SourceTag = sourceTag;
 
     let options = {
       autfill: true,
@@ -59,7 +76,6 @@ export const payment = async ({
     };
 
     await checkBalance(api, signer.classicAddress);
-
     let response = await api.submitAndWait(tx, options);
 
     let meta: any;
