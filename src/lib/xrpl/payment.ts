@@ -18,7 +18,7 @@ export const payment = async ({
   amount?: string | undefined;
   network: string;
 }) => {
-  let api = await client.init(servers[network]);
+  let api = await client.init(servers[network] || network);
   try {
     await api.connect();
     let signer = Wallet.fromSecret(wallet.account.secret);
