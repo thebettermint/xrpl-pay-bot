@@ -30,3 +30,11 @@ export const parseInput = (input: {
 
   return input;
 };
+
+export const parseXAddress = (xAddress: string) => {
+  let isValid = isValidXAddress(xAddress);
+  if (!isValid) return Error('ParseError: Not a valid xAdress');
+  let account = xAddressToClassicAddress(xAddress);
+
+  return [account.classicAddress, account.tag] as const;
+};
