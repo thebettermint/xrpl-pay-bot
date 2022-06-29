@@ -28,20 +28,18 @@ export const payment = async ({
   amount: Amount;
 }) => {
   let api = await client.init(servers[network] || network);
+
   try {
     await api.connect();
     let signer = Wallet.fromSecret(sourceSecret);
 
-    console.log(sourceAddress);
-
-    const feeRequest: FeeRequest = {
-      command: 'fee',
-    };
+    if (sourceAddress && sourceAddress !== signer.classicAddress) throw Error;
 
     if (sourceXaddress) {
       let address = parseXAddress(sourceXaddress);
       if (!(address instanceof Error)) {
         sourceAddress = address[0];
+        if (sourceAddress !== signer.classicAddress) throw Error;
         if (address[1]) sourceTag = address[1];
       }
     }
@@ -54,6 +52,9 @@ export const payment = async ({
       }
     }
 
+    const feeRequest: FeeRequest = {
+      command: 'fee',
+    };
     let feeResponse = await api.request(feeRequest);
     let fee: string = feeResponse.result.drops.median_fee;
     let cushion = api.feeCushion;
@@ -64,6 +65,7 @@ export const payment = async ({
       Account: signer.classicAddress,
       Amount: amount,
       Destination: destinationAddress,
+      Fee: String(Math.max(12000, parseInt(fee) * cushion)),
     };
 
     if (destinationTag) tx.DestinationTag = destinationTag;
@@ -75,7 +77,6 @@ export const payment = async ({
       wallet: signer,
     };
 
-    await checkBalance(api, signer.classicAddress);
     let response = await api.submitAndWait(tx, options);
 
     let meta: any;
