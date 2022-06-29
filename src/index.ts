@@ -4,8 +4,6 @@ import { wait } from './lib/utils/wait';
 import { payment } from './lib/xrpl/payment';
 
 const main = async (config) => {
-  console.log(config);
-
   const length = config.destinations.list.length;
   const cycle = config.destinations.cycle;
 
@@ -61,6 +59,7 @@ const main = async (config) => {
       }
 
       random = Math.floor(Math.random() * length);
+
       console.log(`time to next payment: ${config.time.interval / 1000} sec`);
       console.log(`next payment to: ${config.time.interval / 1000}`);
 
