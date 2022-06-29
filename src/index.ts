@@ -30,9 +30,8 @@ const main = async (config) => {
   let count = 0;
   let random = Math.floor(Math.random() * length);
   if (cycle === 'reverse') count = length - 1;
+  let param: any;
   while (true) {
-    let param;
-
     if (cycle === 'random') {
       param = {
         destinationAddress: config.destinations.list[random].classicAddress,
@@ -43,29 +42,41 @@ const main = async (config) => {
         destinationAddress: config.destinations.list[count].classicAddress,
         destinationTag: config.destinations.list[count].tag,
       };
-
-      param = Object.assign(param, source, amount);
-
-      let p = await payment(param);
-      console.log(p);
-
-      if (cycle !== 'reverse') {
-        count++;
-        if (count === length) count = 0;
-      }
-      if (cycle === 'reverse') {
-        count--;
-        if (count < 0) count = length - 1;
-      }
-
-      random = Math.floor(Math.random() * length);
-
-      console.log(`time to next payment: ${config.time.interval / 1000} sec`);
-      console.log(`next payment to: ${config.time.interval / 1000}`);
-
-      wait(config.time.interval);
     }
+
+    let handled = Object.assign(param, source, amount);
+    let p = await payment(handled);
+    console.log(p);
+
+    if (cycle !== 'reverse') {
+      count++;
+      if (count === length) count = 0;
+    }
+
+    if (cycle === 'reverse') {
+      count--;
+      if (count < 0) count = length - 1;
+    }
+
+    random = Math.floor(Math.random() * length);
+    console.log(`time to next payment: ${config.time.interval / 1000} sec`);
+
+    if (cycle === 'random') {
+      console.log(
+        `next payment to: ${config.destinations.list[random].classicAddress}`
+      );
+    } else {
+      console.log(
+        `next payment to: ${config.destinations.list[count].classicAddress}`
+      );
+    }
+
+    await wait(config.time.interval);
   }
 };
 
-main(config[0]);
+main(config[0])
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+  });
